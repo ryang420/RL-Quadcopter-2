@@ -57,11 +57,9 @@ class Actor():
     
       # adding hidden layers 
       net = layers.Dense(units=400,kernel_regularizer=layers.regularizers.l2(1e-6))(states)
-      net = layers.BatchNormalization()(net)
       net = layers.Activation("relu")(net)
     
       net = layers.Dense(units=300,kernel_regularizer=layers.regularizers.l2(1e-6))(net)
-      net = layers.BatchNormalization()(net)
       net = layers.Activation("relu")(net)
     
       # output_layer
@@ -80,7 +78,7 @@ class Actor():
       loss = K.mean(-action_gradients * actions)
 
       # Define optimizer and training function
-      optimizer = optimizers.Adam()
+      optimizer = optimizers.Adam(lr=.0001)
       updates_op = optimizer.get_updates(params=self.model.trainable_weights, loss=loss)
       self.train_fn = K.function(
           inputs=[self.model.input, action_gradients, K.learning_phase()], 
@@ -112,15 +110,13 @@ class Critic:
 
         # Add hidden layer(s) for state pathway
         net_states = layers.Dense(units=400,kernel_regularizer=layers.regularizers.l2(1e-6))(states)
-        net_states = layers.BatchNormalization()(net_states)
         net_states = layers.Activation("relu")(net_states)
 
         net_states = layers.Dense(units=300, kernel_regularizer=layers.regularizers.l2(1e-6))(net_states)
 
         # Add hidden layer(s) for action pathway
-#         net_actions = layers.Dense(units=400,kernel_regularizer=layers.regularizers.l2(1e-6))(actions)
-#         net_actions = layers.BatchNormalization()(net_actions)
-#         net_actions = layers.Activation("relu")(net_actions)
+        net_actions = layers.Dense(units=400,kernel_regularizer=layers.regularizers.l2(1e-6))(actions)
+        net_actions = layers.Activation("relu")(net_actions)
         
         net_actions = layers.Dense(units=300,kernel_regularizer=layers.regularizers.l2(1e-6))(actions)
 
@@ -139,7 +135,7 @@ class Critic:
         self.model = models.Model(inputs=[states, actions], outputs=Q_values)
 
         # Define optimizer and compile model for training with built-in loss function
-        optimizer = optimizers.Adam()
+        optimizer = optimizers.Adam(lr=.001)
         self.model.compile(optimizer=optimizer, loss='mse')
 
         # Compute action gradients (derivative of Q values w.r.t. to actions)
